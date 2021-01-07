@@ -1,0 +1,136 @@
+# Basic Github Action
+# What it does:
+#  - Run job on branch push/new commits
+name: simple-workflow
+on:
+  push:
+    branches:
+      # You can specify multi branch
+      - main
+      - develop
+jobs:
+  action-one:
+    runs-on: ubuntu-latest
+    steps:
+      # Run simple shell command to print contexts
+      # Reference: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#contexts
+      - name: Dump GitHub context
+        id: dump-github-context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: Dump secrets
+        env:
+          SECRETS: ${{ toJson(secrets) }}
+        # It will be a merge of environment secrets and repo secrets
+        run: echo "$SECRETS"
+
+      - name: Set output
+        id: set-step-output
+        run: echo '::set-output name=output_key::output_value'
+
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT"
+      - name: Dump strategy context
+        env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        run: echo "$STRATEGY_CONTEXT"
+      - name: Dump matrix context
+        env:
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        run: echo "$MATRIX_CONTEXT"
+
+      # Refer to the output of previous steps
+      - name: Print output
+        env:
+          OUTPUTS: ${{ toJson(steps.set-step-output.outputs) }}
+        run: echo "$OUTPUTS"
+
+  action-two:
+    needs: action-one
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump Needs contexts
+        env:
+          NEEDS: ${{ toJson(needs) }}
+        run: echo "$NEEDS"
+      - name: Run if previous steps completed successfully
+        if: ${{ success() }}
+        run: echo "Success"
+      - name: Wait for quite some time
+        run: echo "Intentionally wait..."; sleep 120;
+      - name: Always run regardless if current job is cancelled
+        if: ${{ always() }}
+        run: echo "After all this time?"; echo "Always"
+      - name: On Job cancelled
+        if: ${{ cancelled() }}
+        run: echo "This job is cancelled."
+      - name: Print job status
+        env:
+          STATUS: ${{ job.status }}
+        run: echo "Job status $STATUS"
+
+  action-three:
+    # This job doesn't depend on action-one or action-two
+    # But will be executed immediately regardless of declared order
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Evaluate literal
+        env:
+          myNull: ${{ null }}
+          myBoolean: ${{ false }}
+          myIntegerNumber: ${{ 711 }}
+          myFloatNumber: ${{ -9.2 }}
+          myHexNumber: ${{ 0xff }}
+          # Contrary to what the docs said, this doesn't work
+          # Reference: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#literals
+          # myExponentialNumber: ${{ -2.99-e2 }}
+          myString: ${{ 'Mona the Octocat' }}
+          myEscapedString: ${{ 'It''s open source!' }}
+        # You can declare multiline yaml text for multiline command like this
+        run: |
+          # this line is a shell comment
+          echo $myNull
+          echo $myBoolean
+          echo $myIntegerNumber
+          echo $myFloatNumber
+          echo $myHexNumber
+          # echo $myExponentialNumber
+          echo $myString
+          echo $myEscapedString
+          # Github action expression can be evaluated inside a shell
+          echo "${{ 'I''m an expressions!' }}"
+      - name: Evaluate functions
+        env:
+          fContains: ${{ contains('anagram', 'ana') }}
+          fContainsArr: ${{ contains(fromJson('[1,2,3]'), 3) }}
+          fFormat: ${{ format('Hello {0} {1} {2}', 'Mona', 'the', 'Octocat') }}
+          fJoin: ${{ join(fromJson('[1,2,3]'), ', ') }}
+          fJSONConvert: ${{ toJson(fromJson('{"key":"value"}')) }}
+          # File listing for hashFiles in the current directory can only be done after
+          # using checkout action to checkout the repo
+          fHashFiles: ${{ hashFiles('.github/workflows/*') }}
+          fObjectFilters: ${{ toJson(github.event.commits.*.url) }}
+          fFunctionCase: ${{ jOiN(github.event.commits.*.url, ',') }}
+        run: |
+          echo $fContains
+          echo $fContainsArr
+          echo "$fFormat"
+          echo "$fJoin"
+          echo "$fJSONConvert"
+          echo $fHashFiles
+          echo "$fObjectFilters"
+          echo "$fFunctionCase"
+      - name: Listing defined variables
+        run: set -o posix; set
