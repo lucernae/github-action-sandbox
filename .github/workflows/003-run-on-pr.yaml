@@ -52,10 +52,10 @@ jobs:
     needs: checking-pr
     if: github.event.pull_request.base.repo.url != github.event.pull_request.head.repo.url
     steps:
+      # If PR comes from external repo branch, then no secrets will be available
       - name: Access repo secrets
         run: |
-          echo "This will list available secrets defined in Repo > Settings"
-          echo "By default the values are redacted"
+          echo "For external PR. No secrets will be available"
           echo "${{ toJson(secrets) }}"
   
   do-something-if-outside-pr-with-env-secrets:
@@ -65,8 +65,8 @@ jobs:
     environment:
       name: environment_A
     steps:
+      # If PR comes from external repo branch, then no secrets will be available
       - name: Access repo secrets
         run: |
-          echo "This will list available secrets defined in Repo > Settings"
-          echo "By default the values are redacted"
+          echo "For external PR. No secrets will be available"
           echo "${{ toJson(secrets) }}"
