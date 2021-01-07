@@ -1,7 +1,7 @@
 # Basic Github Action
 # What it does:
 #  - Run job on branch pull requests
-name: simple-workflow
+name: run-on-pr
 on:
   pull_request:
     branches:
