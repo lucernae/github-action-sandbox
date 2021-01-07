@@ -1,0 +1,72 @@
+# Basic Github Action
+# What it does:
+#  - Run job on branch pull requests
+name: simple-workflow
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+jobs:
+  checking-pr:
+    runs-on: ubuntu-latest
+    steps:
+      # Run simple shell command to print contexts
+      # Reference: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#contexts
+      - name: Dump GitHub context
+        id: dump-github-context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Listing defined variables
+        run: set -o posix; set
+  
+  do-something-if-internal-pr:
+    runs-on: ubuntu-latest
+    needs: checking-pr
+    if: github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url
+    steps:
+      # If PR comes from internal repo branch, then you can access repo's secrets and environment secrets
+      - name: Access repo secrets
+        run: |
+          echo "This will list available secrets defined in Repo > Settings"
+          echo "By default the values are redacted"
+          echo "${{ toJson(secrets) }}"
+
+  do-something-if-internal-pr-with-env-secrets:
+    runs-on: ubuntu-latest
+    needs: checking-pr
+    if: github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url
+    environment:
+      name: environment_A
+    steps:
+      # If PR comes from internal repo branch, You can also ask approval to access environment secrets
+      - name: Access repo secrets
+        run: |
+          echo "This will list available secrets defined in Repo > Settings"
+          echo "By default the values are redacted"
+          echo "${{ toJson(secrets) }}"
+  
+  do-something-if-outside-pr:
+    runs-on: ubuntu-latest
+    needs: checking-pr
+    if: github.event.pull_request.base.repo.url != github.event.pull_request.head.repo.url
+    steps:
+      - name: Access repo secrets
+        run: |
+          echo "This will list available secrets defined in Repo > Settings"
+          echo "By default the values are redacted"
+          echo "${{ toJson(secrets) }}"
+  
+  do-something-if-outside-pr-with-env-secrets:
+    runs-on: ubuntu-latest
+    needs: checking-pr
+    if: github.event.pull_request.base.repo.url != github.event.pull_request.head.repo.url
+    environment:
+      name: environment_A
+    steps:
+      - name: Access repo secrets
+        run: |
+          echo "This will list available secrets defined in Repo > Settings"
+          echo "By default the values are redacted"
+          echo "${{ toJson(secrets) }}"
