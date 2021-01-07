@@ -1,0 +1,30 @@
+# Run Github action from the UI
+# What it does:
+#  - Chain action/output of other workflow into different workflow
+name: workflow-chain
+on:
+  # workflow_run allows workflow chaining after previous workflow
+  workflow_run:
+    workflows:
+      - run-manually
+    branches:
+      - main
+    types:
+      - completed
+
+jobs:
+  checking-contexts:
+    runs-on: ubuntu-latest
+    steps:
+      # Run simple shell command to print contexts
+      # Reference: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#contexts
+      - name: Dump GitHub context
+        id: dump-github-context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Access repo secrets
+        run: |
+          echo "This workflow will be able to access whatever secrets that can be accessed by the triggering workflow"
+          echo "${{ toJson(secrets) }}"
