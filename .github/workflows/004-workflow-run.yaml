@@ -1,0 +1,33 @@
+# Run Github action from the UI
+# What it does:
+#  - Allow workflow trigger manually from Github Actions UI
+name: run-manually
+on:
+  # workflow_dispatch allows manually running actions from Github Actions UI
+  # can be cascaded with other events (make other events manually runnable)
+  workflow_dispatch:
+    # You may specify simple inputs from the UI
+    # Values are treated as strings
+    # Format is the same as action inputs
+    inputs:
+      parameterA:
+        description: Some useful description of the param
+        required: true
+        default: default value
+      parameterB:
+        description: Additional param
+        required: false
+
+jobs:
+  checking-contexts:
+    runs-on: ubuntu-latest
+    steps:
+      # Run simple shell command to print contexts
+      # Reference: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#contexts
+      - name: Dump GitHub context
+        id: dump-github-context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Listing defined variables
+        run: set -o posix; set
