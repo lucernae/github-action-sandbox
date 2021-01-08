@@ -1,0 +1,34 @@
+# Run Github action and pass outputs between steps
+# What it does:
+#  - Pass outputs of steps into other steps
+name: output-chain
+on:
+  workflow_dispatch:
+    inputs:
+      firstName:
+        description: First Name
+        required: false
+      lastName:
+        description: Last Name
+        required: false
+
+jobs:
+  checking-outputs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate output to file
+        id: file-output
+        # For shell based action. Set the output using workflow command
+        run: |
+          echo "${{ github.event.inputs.firstname }} ${{ github.event.inputs.lastName }}" > file-output.txt
+          echo "::set-output name=filename::file-output.txt"
+      - name: Retrieve output from file
+        # Retrieve the output value from steps.<step-id>.output context
+        run: cat "${{ steps.file-output.outputs.filename }}"
+      - name: Return json output directly
+        id: json-output
+        # Return json map
+        run: |
+          echo '::set-output name=filename-json::{"name":"`cat ${{ steps.file-output.outputs.filename }}`"}'
+      - name: Show json output
+        run: echo "${{ toJson(steps.json-output.outputs) }}"
