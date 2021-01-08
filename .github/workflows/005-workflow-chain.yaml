@@ -1,4 +1,4 @@
-# Run Github action from the UI
+# Run Github action triggered by other workflow
 # What it does:
 #  - Chain action/output of other workflow into different workflow
 name: workflow-chain
