@@ -25,10 +25,18 @@ jobs:
       - name: Retrieve output from file
         # Retrieve the output value from steps.<step-id>.output context
         run: cat "${{ steps.file-output.outputs.filename }}"
-      - name: Return json output directly
-        id: json-output
-        # Return json map
+
+      - name: Formatting log output
         run: |
-          echo '::set-output name=filename-json::{"name":"`cat ${{ steps.file-output.outputs.filename }}`"}'
-      - name: Show json output
-        run: echo "${{ toJson(steps.json-output.outputs) }}"
+          echo "This is normal output"
+          echo "To enable the following debug output, set ACTIONS_STEP_DEBUG in the repo secrets"
+          echo "::debug::This is a debug message"
+          echo "::warning::This is a warning message"
+          echo "::group::This is a group title"
+          cat << EOF
+          This is some arbitrary multiline
+          of log output
+          or comments
+          that is grouped together
+          EOF
+          echo "::endgroup::"
