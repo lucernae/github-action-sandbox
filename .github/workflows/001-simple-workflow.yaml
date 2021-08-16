@@ -3,6 +3,7 @@
 #  - Run job on branch push/new commits
 name: simple-workflow
 on:
+  workflow_dispatch:
   push:
     branches:
       # You can specify multi branch
