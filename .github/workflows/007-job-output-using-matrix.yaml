@@ -1,0 +1,42 @@
+# Run Github action and pass outputs between steps
+# What it does:
+#  - Pass outputs of steps into other steps
+name: job-output-using-matrix
+on:
+  workflow_dispatch:
+
+jobs:
+  checking-outputs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        key_alphabet:
+          - A
+          - B
+        key_number:
+          - 1
+          - 2
+    outputs:
+      combination: ${{steps.file-output.outputs.combination}}
+    steps:
+      - name: Generate output from matrix
+        id: file-output
+        run: |
+          echo "combination=${{matrix.key_alphabet}}/${{matrix.key_number}}" >> $GITHUB_OUTPUT
+  
+  verify-outputs:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        key_alphabet:
+          - A
+          - B
+    needs: 
+      - checking-outputs
+    steps:
+      - name: Print previous job outputs
+        run: |
+          echo "${{matrix.key_alphabet}}"
+          echo "${{needs.checking-outputs.outputs.combination}}"
